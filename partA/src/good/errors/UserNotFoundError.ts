@@ -14,7 +14,7 @@ export class UserNotFoundError extends UserManagerError {
   /**
    * @param identifier Хайсан ID эсвэл email
    */
-  constructor(identifier: string) {
-    super(`User not found: ${identifier}`);
-  }
+  constructor(public readonly identifier: string) {
+  super(`User not found: ${identifier}`);
+}
 }

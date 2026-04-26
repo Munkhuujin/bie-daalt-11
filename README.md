@@ -13,35 +13,87 @@
 
 
 Хийсэн ажлын тайлан:
-Commit 1:
-Repo үүсгэсэн
 
-Commit 2:
-partA, partB folder үүсгэсэн. 
+Commit 1
 
-Commit 3:
-Bad API-ийг шинжлэн, 10 алдаа олж илрүүлсэн ба хэрхэн сайжруулах талаар тайлбар partA README.md-д бичсэн.
+Repo-г анх үүсгээд GitHub руу push хийсэн. README.md, .gitignore-ийг эхлээд нэмсэн. 
 
-Commit 4:
-Сайжруулсан API-ийн бүтцийг үүсгэсэн.
-( src/good/ дотор types/, errors/ ) фолдер үүсгэсэн.
+Commit 2
 
-Good API бүтцийн товч тайлбар:
+-Төслийн ерөнхий бүтэц гаргаж, partA, partB гэсэн folder-ууд үүсгээд, даалгаврын дагуу салгасан.
+-Мөн өгөгдсөн usr_mgr классыг src/bad/ дотор тайлан дээрх bad api кодыг хуулж тавьсан.
 
-src/good/ фолдерт дараах байдлаар хуваав:
+Commit 3
 
-- **types/** — өгөгдлийн төрлүүд
-  - user.ts — User interface, UserStatus enum
-  - dto.ts — CreateUserDto, UpdateUserDto
-  - search.ts — UserSearchCriteria
-  - config.ts — UserManagerConfig
-  - index.ts — нэгдсэн export
+-Bad API-г лекцийн агуулгын дагуу маш нарийн шинжэлж харахад 10 дизайны алдаа олж илрүүлээд тус бүрийг partA/README.md тайлбарлаж бичсэн. (flag ашигласан method ба id/email холисон хэсэг) г/м зарим нь хоорондоо холбоотой юм шиг санагдсан.
 
-- **errors/** — домэйн алдаанууд
-  - UserManagerError.ts — суурь алдааны класс
-  - UserNotFoundError.ts, DuplicateEmailError.ts,
-    InvalidInputError.ts, RepositoryError.ts — тусгай алдаанууд
-  - index.ts — нэгдсэн export
+Commit 4
 
-- **UserManager.ts** — гол менежер класс
-- **index.ts** — public API
+Good API-ийн бүтцийг яаж хуваахаа бага зэрэг бодсон. Шууд нэг файлд бичихээс илүү салгаж өгөх нь дээр юм шиг санагдсан. 
+
+src/good/ дотор:
+
+- types/
+- errors/ - гэж 2 фолдер болгож салгасан ба types болон errors folder доторх file-ийн загвар skeleton маягаар ямар файл байх вэ? гэдгийг урьдчилж гаргаж өгсөн.
+
+-types/ дотор:
+
+user.ts
+dto.ts
+search.ts
+config.ts гэсэн файлууд байхаар төлөвлөсөн. Бас index.ts нэмээд дараа нь нэг дороос export хийхээр бодсон.
+
+-errors/ -фолдерд ч бас адилхан:
+
+base error (UserManagerError) дараа нь тусгай error-ууд нэмэхээр placeholder файл үүсгэсэн. UserManager.ts болон root index.ts-ийг ч бас энэ үед үүсгэсэн, гэхдээ доторх кодуудыг нь хараахан бичээгүй. Зүгээр л бүтцийг гаргаж өгсөн.
+
+Commit 5
+
+Өмнөх commit дээрх хийсэн types/ фолдер доторх файлуудыг нэлээд дэлгэрүүлж файл хоорондын уялдаа холбоог тодорхойлж, кодыг бичсэн.
+
+-Эхлээд user.ts дээр ажилласан. User interface болон UserStatus enum-ийг тодорхойлсон. Status-ийг string байлгах уу enum болгох уу гэж эргэлзсэн, гэхдээ enum байвал алдаа бага гарна гэж үзээд enum болгосон.
+
+-Дараа нь dto.ts дээр CreateUserDto, UpdateUserDto хоёрыг салгаж өгсөн. Эхэндээ нэг interface ашиглах уу гэж бодсон ч create ба update хоёрын шаардлага өөр болохоор тусад нь байвал дээр юм шиг санагдсан.
+-CreateUserDto дээр заавал хэрэгтэй талбарууд
+-UpdateUserDto дээр optional талбарууд (partial update хийхэд хэрэгтэй гэж үзсэн) гэсэн байдлаар ялгасан.
+
+-search.ts дээр жаахан гацсан. Анхны find(q: string)-ийг яаж сайжруулах вэ гэж бодож байгаад, эцэст нь object болгосон нь илүү ойлгомжтой санагдсан (UserSearchCriteria). Ингэснээр ямар талбараар хайж байгааг илүү тодорхой болгоно.
+
+-config.ts дээр timeout-ийг хаана хадгалах вэ гэдгийг шийдсэн. Method бүрт дамжуулах нь жаахан давтагдсан санагдсан тул config объект болгож нэг дор төвлөрүүлсэн (timeoutMs). Мөн бүх types-ийг нэг дороос import хийж болохоор index.ts файл нэмсэн.
+
+Нийтдээ commit 5-ийн хүрээнд  “зөв structure дээр type-уудаа суулгах” дээр төвлөрсөн.
+
+Commit 6
+
+errors/ хэсгийг энэ commit дээр бичсэн. Эхэндээ энгийн Error ашиглах уу гэж бодсон ч дараа нь нэг стандарттай болгох нь дээр юм шиг санагдсан. Ялангуяа өмнөх код дээр 'ERR_404' гэх мэт string буцааж байсан нь жаахан эвгүй харагдсан. Тиймээс эхлээд суурь class хийсэн:
+
+-UserManagerError — бүх алдааны base class (code талбар нэмсэн, дараа нь хэрэг болох байх гэж бодсон). Дараа нь түүнээс удамшуулж хэд хэдэн тусгай error-ууд нэмсэн:
+
+UserNotFoundError — user олдохгүй үед
+DuplicateEmailError — email давхцах үед
+InvalidInputError — буруу input (энд field, reason нэмсэн)
+RepositoryError — DB талын алдааг шууд гаргахгүйн тулд wrap хийсэн
+Ялангуяа SQLException-ийг шууд гаргахгүй, RepositoryError болгож байгаа нь арай зөв санагдсан. Ингэснээр дээд талын код DB-ийн талаар мэдэх шаардлагагүй болно. Мөн index.ts нэмээд бүх error-уудыг нэг дороос export хийдэг болгосон — дараа нь import хийхэд амар. Энэ commit дээр яг error-уудын бүтцийг жигдрүүлж зөв болгохыг зорьсон.
+
+Commit 7
+
+Энэ commit дээр UserManager.ts-ийг бичиж дуусгасан. Өмнөх commit-ууд дээр types, errors-оо бэлдчихсэн байсан болохоор одоо тэднийг ашиглаад үндсэн логик, кодоо угсарч эхэлсэн. Эхэндээ хуучин do_user_op шиг нэг method байлгах уу гэж бодсон (кодыг шууд replace хийх маягаар), гэхдээ бичиж эхлэхэд төвөгтэй санагдаад болисон. Тэгээд дараах байдлаар тус тусад нь method-ууд гаргасан:
+
+createUser
+updateUser
+deleteUser
+restoreUser
+
+Ингэснээр код уншихад илүү ойлгомжтой амар болж өгсөн. Мөн өмнөх get_u(id_or_email, flag) хэсгийг салгаад:
+
+getUserById
+getUserByEmail - гэж хоёр тусдаа функц болгосон. Flag ашиглах нь үнэхээр эвгүй, хүндрэлтэй байсан болохоор.
+
+-searchUsers(criteria) гэдэг method нэмсэн — өмнөх find(q)-ээс илүү тодорхой болсон. Ямар талбараар хайж байгааг шууд харж болдог.
+-Дотоод users массив болон config-ийг private readonly болгосон. Эхэндээ public байлгах уу гэж бодсон ч гаднаас өөрчлөгдөх эрсдэлтэй санагдсан.
+-Constructor дээр UserManagerConfig авдаг болгосон — timeout зэрэг тохиргоог нэг дор байлгах нь илүү цэгцтэй юм шиг.
+-Error handling дээр өмнө хийсэн error class-уудаа ашигласан. String буцаахаа больж, шууд exception throw хийдэг болгосон. Ингэснээр API-ийн contract илүү тогтвортой болсон.
+-Мөн энэ commit дээр good/index.ts нэмсэн. Бүх зүйлээ нэг entry point-оос export хийвэл дараа нь import хийхэд амар санагдсан. Энэхүү commit-ийн хүрээнд дээр өмнөх commit-ууд дээр бэлдсэн бүх хэсгийг нийлүүлж, ажилладаг API болгосон гэж хэлж болно.
+
+
+
