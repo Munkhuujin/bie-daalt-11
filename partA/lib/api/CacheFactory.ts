@@ -1,5 +1,6 @@
 import type { Cache } from "./Cache";
 import { LRUCache } from "../impl/LRUCache";
+import { TTLCache } from "../impl/TTLCache";
 import { InvalidConfigError, UnknownCacheTypeError } from "./errors";
 
 /**
@@ -8,32 +9,43 @@ import { InvalidConfigError, UnknownCacheTypeError } from "./errors";
 export type CacheType = "lru" | "lfu" | "ttl";
 
 /**
- * Кэшийн үндсэн тохиргоо.
+ * Кэш үүсгэхэд хэрэгтэй үндсэн тохиргоо.
  *
  * @remarks
- * lru, lfu → зөвхөн capacity ашиглана
- * ttl → нэмээд defaultTtlMs шаардлагатай
+ * lru, lfu → зөвхөн capacity
+ * ttl → capacity + defaultTtlMs шаардлагатай
  */
 export interface CacheConfig {
-  /** Кэшийн дээд хэмжээ */
+  /** Кэшийн багтаамж (0-ээс их байх ёстой) */
   readonly capacity: number;
 
-  /** TTL кэшийн default хугацаа (ms) */
+  /**
+   * TTL кэшийн default хугацаа (ms).
+   * Зөвхөн ttl төрөлд хэрэглэгдэнэ.
+   */
   readonly defaultTtlMs?: number;
 }
 
 /**
- * Кэш үүсгэх Factory.
+ * Кэш үүсгэх factory.
  *
- * Бүх concrete cache-уудыг нууж, зөвхөн энэ entry point-оор ашиглана.
+ * Гаднаас шууд LRUCache, TTLCache гэх мэт классуудыг ашиглахгүй,
+ * зөвхөн энэ factory-ээр дамжуулж үүсгэнэ.
+ *
+ * @example
+ * const cache = CacheFactory.create<string>("lru", { capacity: 100 });
  */
 export class CacheFactory {
-  /**
-   * Кэш үүсгэнэ.
+/**
+   * Төрөл болон тохиргоог нь шалгаж байж кэш үүсгэж өгнө.
+   * 
+   * @throws {InvalidConfigError} Тохиргоо буруу (0-ээс бага г.м) үед
+   * @throws {UnknownCacheTypeError} Танихгүй төрөл ирэх үед
    */
   static create<V>(type: CacheType, config: CacheConfig): Cache<V> {
+    // Үндсэн багтаамж 0-ээс их байгааг шалгах
     if (config.capacity <= 0) {
-      throw new InvalidConfigError("capacity", "must be > 0");
+      throw new InvalidConfigError("capacity", "must be greater than 0");
     }
 
     switch (type) {
@@ -41,16 +53,17 @@ export class CacheFactory {
         return new LRUCache<V>(config.capacity);
 
       case "lfu":
-        throw new Error("LFU not implemented");
+        // TODO: LFUCache-г хэрэгжүүлсний дараа холбоно
+        throw new Error("LFU not implemented yet");
 
       case "ttl":
-        if (!config.defaultTtlMs || config.defaultTtlMs <= 0) {
+        if (config.defaultTtlMs === undefined || config.defaultTtlMs <= 0) {
           throw new InvalidConfigError(
             "defaultTtlMs",
-            "must be > 0 for TTL"
+            "must be greater than 0 for TTL cache"
           );
         }
-        throw new Error("TTL not implemented");
+        return new TTLCache<V>(config.capacity, config.defaultTtlMs);
 
       default:
         throw new UnknownCacheTypeError(type);
