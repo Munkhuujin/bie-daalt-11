@@ -1,62 +1,41 @@
-import type { Cache } from "../api/Cache";
-
 /**
- * LRU (Least Recently Used) кэш хэрэгжилт.
+ * LRU cache implementation.
  *
- * Хамгийн саяхан ашиглаагүй ключийг устгадаг — кэш дүүрсэн үед
- * хамгийн эртний `get`/`set` хийгдсэн ключийг гаргаж шинэ ключийг оруулдаг.
+ * Хамгийн удаан ашиглагдаагүй key-ийг устгаж шинэ entry-д зай гаргана.
+ * Map-ийн insertion order ашиглаж LRU-г хялбархан хэрэгжүүлсэн.
  *
- * JavaScript-ийн `Map` нь оруулсан дарааллыг хадгалдаг учраас үүнийг
- * "хамгийн эртний" болон "хамгийн шинэ"-г илэрхийлэхэд ашигласан:
- *   - Map-ийн эхний элемент = хамгийн эртний ашигласан
- *   - Map-ийн сүүлийн элемент = хамгийн саяхан ашигласан
- *
- * `get` болон `set` үед ключийг устгаад дахин нэмэх замаар "шинэ" болгоно.
- *
- * @typeParam V Кэшэд хадгалах утгын төрөл
- *
- * @internal Энэ class-ийг гадагш export хийхгүй —
- *           гадны код зөвхөн `CacheFactory.create("lru", ...)` ашиглана.
+ * @internal Энэ class-ийг шууд ашиглахгүй, зөвхөн Factory-аар үүсгэнэ.
  */
 export class LRUCache<V> implements Cache<V> {
   private readonly map = new Map<string, V>();
   private readonly capacity: number;
 
-  /**
-   * @param capacity Кэшийн дээд хэмжээ. CacheFactory-аас дамжуулагдана,
-   *                 Factory нь capacity > 0 гэдгийг шалгасан байх ёстой.
-   */
   constructor(capacity: number) {
     this.capacity = capacity;
   }
 
   /**
-   * Ключийн утгыг авах. Хэрэв олдвол энэ ключ "хамгийн саяхан ашигласан"
-   * болж хувирна (Map-ийн төгсгөлд шилжинэ).
+   * Key-ийн утгыг авна.
+   * Олдвол хамгийн сүүлд ашигласан болгож refresh хийнэ.
    */
   get(key: string): V | null {
-    if (!this.map.has(key)) {
-      return null;
-    }
+    if (!this.map.has(key)) return null;
 
-    // Map-аас гаргаад дахин нэмэх → дараалал шинэчлэгдэнэ
-    const value = this.map.get(key) as V;
+    const value = this.map.get(key)!;
     this.map.delete(key);
     this.map.set(key, value);
+
     return value;
   }
 
   /**
-   * Утга хадгалах. Хэрэв ключ байсан бол шинэчилнэ.
-   * Хэрэв capacity дүүрсэн бол хамгийн эртний ашигласан ключийг устгана.
+   * Value хадгална.
+   * Capacity дүүрсэн бол хамгийн хуучныг устгана.
    */
   set(key: string, value: V): void {
-    // Хэрэв ключ аль хэдийн байгаа бол устгаад дахин нэмнэ
-    // (дараалал шинэчлэгдэнэ)
     if (this.map.has(key)) {
       this.map.delete(key);
     } else if (this.map.size >= this.capacity) {
-      // Capacity дүүрсэн → эхний (хамгийн эртний) ключийг устгана
       const oldestKey = this.map.keys().next().value;
       if (oldestKey !== undefined) {
         this.map.delete(oldestKey);
@@ -67,30 +46,28 @@ export class LRUCache<V> implements Cache<V> {
   }
 
   /**
-   * Ключ байгаа эсэхийг шалгах.
-   * `get`-аас ялгаатай нь — энэ үйлдэл "ашиглалт" гэж тооцогдохгүй,
-   * Map-ийн дараалал өөрчлөгдөхгүй.
+   * Key байгаа эсэхийг шалгана.
    */
   has(key: string): boolean {
     return this.map.has(key);
   }
 
   /**
-   * Ключийг устгах.
+   * Key устгана.
    */
   delete(key: string): boolean {
     return this.map.delete(key);
   }
 
   /**
-   * Бүх элементийг устгах.
+   * Cache цэвэрлэх.
    */
   clear(): void {
     this.map.clear();
   }
 
   /**
-   * Одоогийн элементийн тоо.
+   * Одоогийн хэмжээ.
    */
   size(): number {
     return this.map.size;
