@@ -1,3 +1,5 @@
+import { Cache } from "../api/Cache";
+
 /**
  * LRU cache implementation.
  *
