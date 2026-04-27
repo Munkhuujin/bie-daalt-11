@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import cors from "cors";
 import booksRouter from "./routes/books";
+import membersRouter from "./routes/members";
 
 const app: Application = express();
 
@@ -14,5 +15,6 @@ app.get("/health", (req, res) => {
 
 // Routes
 app.use("/books", booksRouter);
+app.use("/members", membersRouter);
 
 export default app;
