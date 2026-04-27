@@ -1,6 +1,7 @@
 import type { Cache } from "./Cache";
 import { LRUCache } from "../impl/LRUCache";
 import { TTLCache } from "../impl/TTLCache";
+import { LFUCache } from "../impl/LFUCache"; // ← ШИНЭ МӨР
 import { InvalidConfigError, UnknownCacheTypeError } from "./errors";
 
 /**
@@ -53,8 +54,7 @@ export class CacheFactory {
         return new LRUCache<V>(config.capacity);
 
       case "lfu":
-        // TODO: LFUCache-г хэрэгжүүлсний дараа холбоно
-        throw new Error("LFU not implemented yet");
+        return new LFUCache<V>(config.capacity);
 
       case "ttl":
         if (config.defaultTtlMs === undefined || config.defaultTtlMs <= 0) {
