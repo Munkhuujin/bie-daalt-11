@@ -137,6 +137,7 @@ LRU cache-н unit тестүүдийг энэ commit-оор бичсэн. Эхл
 
 Нийт 11 тест болсон. Хамгийн чухал нь "get() refreshes a key" гэдэг тест — A-г уншсаны дараа D нэмбэл B устах ёстой. `beforeEach` дотор тест бүрд шинэ кэш үүсгэснээр тестүүд бие биенээсээ хамаарахгүй болсон.
 
+![LRU cache тестийн үр дүн](./partA/screenshots/lru-tests.png)
 
 Commit 12
 
@@ -173,6 +174,8 @@ async ашиглах хэрэгтэй болсон. setTimeout-аас Promise х
 
 Бүх тест нэг secund хүрэхгүй хугацаанд гүйцэт ажиллаж байгаа.
 
+![TTL cache тестийн үр дүн](./partA/screenshots/ttl-tests.png)
+
 Commit 14
 
 LFU cache-г энэ commit-оор хийсэн. Бусад хоёртой харьцуулахад жаахан өөр 
@@ -193,5 +196,13 @@ LFU cache-г энэ commit-оор хийсэн. Бусад хоёртой хар
 Tie-breaking жаахан төвөгтэй санагдсан. Хоёр key ижил freq-тэй байвал алийг устгах вэ? Эцэст нь Map-н insertion order-г ашигласан — JavaScript-н Map 
 оруулсан дарааллаа хадгалдаг учир for...of-ээр явахад хамгийн эртний нь эхэнд олдоод устана. LRU-д ашигласан зүйл шиг.
 
+![LFU cache тестийн үр дүн](./partA/screenshots/lfu-tests.png)
+
 Factory дотор lfu case-аас "not implemented" хасаад LFUCache-г холбосон. 
 Capacity-н шалгалт өмнө байсан болохоор нэмэлт өөрчлөлт шаардагдаагүй.
+
+![Factory тестийн үр дүн](./partA/screenshots/factory-tests.png)
+
+Нийт 32 тест болсон ба шалгалт:
+
+![Бүх 32 тест PASS](./partA/screenshots/all-tests.png)
