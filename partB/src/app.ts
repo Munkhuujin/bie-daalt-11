@@ -2,6 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import booksRouter from "./routes/books";
 import membersRouter from "./routes/members";
+import loansRouter from "./routes/loans";
 
 const app: Application = express();
 
@@ -16,5 +17,6 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/books", booksRouter);
 app.use("/members", membersRouter);
+app.use("/loans", loansRouter);
 
 export default app;
