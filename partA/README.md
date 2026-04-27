@@ -1,8 +1,8 @@
-А.1 — Муу API-ийн алдааны шинжилгээ
+# А.1 — Муу API-ийн алдааны шинжилгээ
 
 `bad API` болох `usr_mgr` классыг харахад API дизайны хэд хэдэн зарчмыг зөрчсөн байсан.
 
-1. Нэршил ойлгомжгүй, стандарт зөрчсөн
+# 1. Нэршил ойлгомжгүй, стандарт зөрчсөн
 
 class usr_mgr { ... }
 public db_conn: any;
@@ -16,7 +16,7 @@ get_u(...)
 
 -Иймээс нэршлийг аль болох ойлгомжтой, нэг хэвийн байлгах нь дээр гэж бодсон. UserManager, getUser, dbConnection гэх мэт бол шууд уншаад ойлгогдоно.
 
-2. Дотоод өгөгдөл шууд ил гарсан
+# 2. Дотоод өгөгдөл шууд ил гарсан
 
 public db_conn: any;
 public users_arr: Array<any> = [];
@@ -29,7 +29,7 @@ usr_mgr.users_arr.push(...)
 
 -Ийм зүйлээс зайлсхийхийн тулд private болгож, шаардлагатай үед getter ашиглах нь илүү зөв.
 
-3. Нэг метод дотор олон үйлдэл чихсэн байна
+# 3. Нэг метод дотор олон үйлдэл чихсэн байна
 
 do_user_op(obj, flag: number, timeout)
 
@@ -43,7 +43,7 @@ createUser(...)
 updateUser(...)
 deleteUser(...)
 
-4. any төрлийг хэт их ашигласан
+# 4. any төрлийг хэт их ашигласан
 
 db_conn: any
 users_arr: Array<any>
@@ -55,7 +55,7 @@ do_user_op(obj: any, ...)
 
 -Иймээс User, CreateUserDto, UpdateUserDto гэх мэт тодорхой type-ууд ашиглах нь илүү найдвартай санагдсан.
 
-5. Алдааг string-ээр буцааж байна
+# 5. Алдааг string-ээр буцааж байна
 
 get_u(): string
 // 'ERR_404'
@@ -66,7 +66,7 @@ get_u(): string
 
 -Үүнийг засахдаа exception ашиглах нь илүү тохиромжтой юм шиг. Нэг хэвийн error handling-тэй болно.
 
-6. JSON string буцааж байна
+# 6. JSON string буцааж байна
 
 get_u() нь user-ийг JSON string болгож буцааж байна. Энэ нь жаахан илүүц санагдсан.
 
@@ -74,7 +74,7 @@ get_u() нь user-ийг JSON string болгож буцааж байна. Эн�
 
 -Үүнийг засахдаа User объектыг шууд буцаах нь зөв болов уу гэж бодсон. JSON болгох ажил нь controller талд нь байх ёстой.
 
-7. Database-ийн алдаа шууд гадагш гарч байна
+# 7. Database-ийн алдаа шууд гадагш гарч байна
 
 throws SQLException
 
@@ -87,7 +87,7 @@ throws SQLException
 UserNotFoundError
 UserRepositoryError
 
-8. Нэг параметрт хоёр өөр утга холисон
+# 8. Нэг параметрт хоёр өөр утга холисон
 
 get_u(id_or_email: string, flag: number)
 
@@ -100,7 +100,7 @@ get_u(id_or_email: string, flag: number)
 getUserById(...)
 getUserByEmail(...) ингэж салгавал илүү ойлгомжтой болно
 
-9. Хайлтын API тодорхой биш
+# 9. Хайлтын API тодорхой биш
 
 find(q: string)
 
@@ -110,7 +110,7 @@ find(q: string)
 
 searchUsers(criteria) - ингэснээр ямар талбараар хайж байгааг шууд харж болно.
 
-10. timeout параметр ойлгомжгүй
+# 10. timeout параметр ойлгомжгүй
 
 timeout: number
 
@@ -121,3 +121,90 @@ timeout: number
 class UserManager {
   constructor(private timeoutMs: number) {}
 }
+
+# А.2 — Cache сан, дизайны шийдвэрлэлт
+
+А.1 дээр хийсэн шинжилгээний зарчмуудыг хэрэгжүүлэх зорилгоор cache сан бичсэн. Гурван сонголтоос (cache, rate limiter, retry policy) cache-ийг сонгосон. LRU-ийн логик нь хичээл дээр үзсэн зүйлтэй холбоотой, мөн бодит хэрэглээнд ойр санагдсан.
+
+# Ерөнхий бүтэц
+
+Нийт 3 төрлийн cache хэрэгжүүлсэн — LRU, TTL, LFU. Бүгд `Cache<V>` гэсэн нэг интерфейсийг хэрэгжүүлнэ. Concrete class-уудыг impl/ хавтсанд байрлуулсан бөгөөд гадагш шууд export хийгээгүй, зөвхөн Factory-аар дамжуулж ашиглахаар зохион байгуулсан.
+
+# Public interface
+
+`Cache<V>` дотор 6 үндсэн method тодорхойлсон: get, set, has, delete, clear, size. Эдгээр нь ихэнх cache library-д байдаг стандарт үйлдлүүд.
+
+Value-ийн төрлийг уян хатан байлгахын тулд generic <V> ашигласан. Харин key-г string гэж тогтмол авсан — практикт ихэнхдээ string key ашиглагддаг тул нэмэлт generic шаардлагагүй гэж үзсэн.
+
+# LRU (Least Recently Used)
+
+LRU (Least Recently Used) нь хамгийн сүүлд ашиглагдаагүй key-г устгадаг. JavaScript-ийн Map нь оруулсан дарааллыг хадгалдаг тул үүнийг ашигласан. get хийх үед key-г устгаад дахин нэмснээр “хамгийн сүүлд ашиглагдсан” болгоно.
+
+Capacity дүүрсэн үед map.keys().next().value ашиглан хамгийн эртний key-г олж устгадаг.
+
+# TTL (Time To Live)
+
+TTL (Time To Live) нь хугацаатай cache. Lazy expiration аргыг сонгосон — get эсвэл has хийх үед expire болсон эсэхийг шалгана.
+
+Эхэндээ setTimeout ашиглаж автоматаар устгах талаар бодсон ч олон key-тэй үед timer-ууд хуримтлагдаж, memory дээр асуудал үүсгэж болзошгүй санагдсан. Тиймээс lazy арга илүү энгийн, найдвартай гэж үзсэн.
+
+Хадгалах бүтэц нь { value, expireAt }. Date.now() дээр defaultTtlMs-ийг нэмээд expire цагийг тооцдог.
+
+# LFU (Least Frequently Used)
+
+LFU (Least Frequently Used) нь хамгийн бага давтамжтай ашиглагдсан key-г устгадаг. LRU-ээс ялгаатай нь “хэзээ” биш, “хэдэн удаа” ашиглагдсан дээр суурилдаг.
+
+Frequency-г тусдаа Map-д хадгалж, eviction хийх үед бүх key-г шалган хамгийн бага утгатайг олдог. Энэ нь O(n) ажиллагаатай, тийм ч оновчтой биш боловч хичээлийн төслийн хувьд хангалттай гэж үзсэн.
+
+Хэрэв frequency ижил байвал Map-ийн insertion order ашиглан хамгийн эртний орсон key-г устгана.
+
+# Factory pattern
+
+CacheFactory.create(type, config) нь cache үүсгэх цорын ганц entry point. LRUCache, TTLCache, LFUCache-уудыг гадагш export хийгээгүй тул гадны код эдгээрийг шууд ашиглах боломжгүй.
+
+Factory дотор config-ийн шалгалт хийдэг. capacity <= 0 бол InvalidConfigError, TTL дээр defaultTtlMs буруу байвал мөн адил алдаа шиднэ. Хэрэв тодорхойгүй type ирвэл UnknownCacheTypeError үүсгэнэ.
+
+А.1 дээрх муу API-тай харьцуулахад concrete class-уудыг нууж, нэг цэгээс удирдах байдлаар илүү цэгцтэй болсон.
+
+# Алдааны систем
+
+CacheError суурь class-аас InvalidConfigError, UnknownCacheTypeError гэсэн алдаанууд удамшсан. Ингэснээр string буцаахын оронд стандарт exception ашиглаж байгаа.
+
+Мөн Object.setPrototypeOf ашигласан — TypeScript дээр Error-ийг удамшуулахад instanceof буруу ажиллах асуудлыг засахын тулд.
+# Тестийн стратеги
+
+Cache төрөл тус бүрд тусдаа тест файл бичсэн: LRU, TTL, LFU, Factory. Нийт 32 тест болсон (шаардлагын 15-аас илүү).
+
+TTL тест дээр async логик шаардлагатай байсан. setTimeout-ийг Promise болгон wrap хийсэн helper функц бичээд тестүүдэд ашигласан. Жишээ нь 100ms TTL-тэй cache дээр 60ms + 60ms хүлээж expire шалгасан.
+
+beforeEach ашиглаж тест бүрд шинэ cache үүсгэсэн тул тестүүд хоорондоо хамааралгүй болсон.
+
+# Тестийн үр дүн
+
+LRU cache (11 тест):
+
+![LRU cache тестийн үр дүн](./screenshots/lru-tests.png)
+
+TTL cache (10 тест):
+
+![TTL cache тестийн үр дүн](./screenshots/ttl-tests.png)
+
+LFU cache (5 тест):
+
+![LFU cache тестийн үр дүн](./screenshots/lfu-tests.png)
+
+CacheFactory (6 тест):
+
+![Factory тестийн үр дүн](./screenshots/factory-tests.png)
+
+Нийт 32 тест бүгд PASS:
+
+![Бүх 32 тест PASS](./screenshots/all-tests.png)
+
+# Тулгарсан бэрхшээлүүд
+
+LRU-ийн eviction логикийг эхэндээ буруу бичсэн. Capacity дүүрэх үед хамгийн эртний key-г устгахаас өмнө шинэ key-г оруулчихсан байсан тул size нь capacity-аас давж байсан. Тест ажиллуулах явцад илрүүлж зассан.
+
+Мөн Cache гэдэг нэр нь DOM API-д байдагтай давхцаж, TypeScript дээр зөрчил үүссэн. Backend төсөлд DOM хэрэггүй тул tsconfig дээр "lib": ["ES2022"] гэж тохируулж шийдсэн.
+
+LFU-ийн tie-breaking хэсэг дээр бага зэрэг эргэлзсэн. Эцэст нь Map-ийн insertion order ашиглах нь хамгийн энгийн шийдэл гэж үзсэн (LRU-тэй төстэй).

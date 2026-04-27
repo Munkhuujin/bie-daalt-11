@@ -199,10 +199,22 @@ Tie-breaking жаахан төвөгтэй санагдсан. Хоёр key иж
 ![LFU cache тестийн үр дүн](./partA/screenshots/lfu-tests.png)
 
 Factory дотор lfu case-аас "not implemented" хасаад LFUCache-г холбосон. 
-Capacity-н шалгалт өмнө байсан болохоор нэмэлт өөрчлөлт шаардагдаагүй.
+Capacity-н шалгалт өмнө байсан болохоор нэмэлт өөрчлөлт шаардагдаагүй
+
+Commit 15
+
+LFU болон CacheFactory-н unit тестүүдийг бичсэн. LFU дээр 5 тест — энгийн үйлдлүүд, eviction logic, tie-breaking. Factory дээр 6 тест — гурван cache төрөл үүсгэх + алдааны нөхцөлүүд.
 
 ![Factory тестийн үр дүн](./partA/screenshots/factory-tests.png)
 
-Нийт 32 тест болсон ба шалгалт:
+Бүх 4 тестийн файл болон нийт 32 тестийн PASS болсон screenshot-уудыг screenshots/ хавтсанд хадгалж README-д оруулсан.
 
-![Бүх 32 тест PASS](./partA/screenshots/all-tests.png)
+![Бүх 32 тест PASS](./partA/screenshots/all-tests.png) 
+
+Commit 16
+
+partA/README дээр А.2 хэсгийг нэмж, cache сангийн дизайны шийдлүүдийг товч тайлбарласан. Ерөнхий бүтэц, public interface, LRU/TTL/LFU хэрэгжилт, factory болон алдааны системийг дараалалтайгаар бичсэн.
+
+Яагаад ийм шийдэл сонгосон, ямар trade-off хийснийг товч дурдсан бөгөөд А.1 дээрх муу API-тай харьцуулж ялгааг нь харуулсан.
+
+Мөн тестийн screenshot-уудыг screenshots/ хавтсаас холбоод оруулсан. Markdown дээр Cache<V> гэх мэт generic-уудыг зөв харагдуулахын тулд backtick ашиглаж зассан.
