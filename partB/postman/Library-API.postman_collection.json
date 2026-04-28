@@ -1,0 +1,365 @@
+{
+  "info": {
+    "_postman_id": "e798f6ce-2f16-4dfe-b65c-95f8db8c1c8f",
+    "name": "Library-API",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54359486",
+    "_collection_link": "https://go.postman.co/collection/54359486-e798f6ce-2f16-4dfe-b65c-95f8db8c1c8f?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has accessToken\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"accessToken\");\r",
+              "    pm.expect(json.accessToken).to.be.a(\"string\").and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "pm.environment.set(\"token\", json.accessToken);\r",
+              "pm.environment.set(\"userId\", json.userId);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"admin@library.com\",\r\n    \"password\": \"admin123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Get Books",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has data array and pagination\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"data\");\r",
+              "    pm.expect(json.data).to.be.an(\"array\");\r",
+              "    pm.expect(json).to.have.property(\"pagination\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Pagination has correct structure\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.pagination).to.include.keys([\"page\", \"limit\", \"total\"]);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/books",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "books"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Create Book",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has book id and matches input\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"id\");\r",
+              "    pm.expect(json.title).to.equal(\"The Mythical Man-Month\");\r",
+              "    pm.expect(json.author).to.equal(\"Fred Brooks\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Book has available=true by default\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.available).to.equal(true);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "pm.environment.set(\"lastBookId\", json.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"The Mythical Man-Month\",\r\n  \"author\": \"Fred Brooks\",\r\n  \"isbn\": \"978-0201835953\",\r\n  \"publishedYear\": 1975\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/books",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "books"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Get Book by ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Returns the created book\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.title).to.equal(\"The Mythical Man-Month\");\r",
+              "    pm.expect(json.author).to.equal(\"Fred Brooks\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/books/{{lastBookId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "books",
+            "{{lastBookId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Create Member",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has member id and email\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"id\");\r",
+              "    pm.expect(json.email).to.equal(\"postman@test.com\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Member has joinedAt date\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"joinedAt\");\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "pm.environment.set(\"lastMemberId\", json.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"Postman User\",\r\n  \"email\": \"postman@test.com\",\r\n  \"phone\": \"99000111\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/members",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "members"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Create Loan",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Loan has 14-day due date and not extended\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json).to.have.property(\"dueDate\");\r",
+              "    pm.expect(json.extended).to.equal(false);\r",
+              "    pm.expect(json.returnedAt).to.equal(null);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Loan links book and member correctly\", function () {\r",
+              "    const json = pm.response.json();\r",
+              "    pm.expect(json.bookId).to.equal(1);\r",
+              "    pm.expect(json.memberId).to.equal(1);\r",
+              "});\r",
+              "\r",
+              "const json = pm.response.json();\r",
+              "pm.environment.set(\"lastLoanId\", json.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"bookId\": 1,\r\n  \"memberId\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/loans",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "loans"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
