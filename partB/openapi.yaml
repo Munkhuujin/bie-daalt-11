@@ -1,0 +1,459 @@
+openapi: 3.0.3
+info:
+  title: Library Lending API
+  description: |
+    Номын сангийн ном зээлэх систем.
+    Гишүүн нэгэн зэрэг ≤5 ном зээлж, 14 хоногийн хугацаатай, 1 удаа сунгах боломжтой.
+  version: 1.0.0
+  contact:
+    name: Munkhuujin
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: books
+    description: Book management
+  - name: members
+    description: Member management
+  - name: loans
+    description: Loan management with business rules
+  - name: reservations
+    description: Book reservations
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Book:
+      type: object
+      required: [id, title, author, isbn, publishedYear, available]
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        isbn:
+          type: string
+          example: 978-0132350884
+        publishedYear:
+          type: integer
+          example: 2008
+        available:
+          type: boolean
+          example: true
+
+    Member:
+      type: object
+      required: [id, name, email, phone, joinedAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        joinedAt:
+          type: string
+          format: date
+
+    Loan:
+      type: object
+      required: [id, bookId, memberId, loanedAt, dueDate, returnedAt, extended]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        memberId:
+          type: integer
+        loanedAt:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        returnedAt:
+          type: string
+          format: date
+          nullable: true
+        extended:
+          type: boolean
+
+    Reservation:
+      type: object
+      required: [id, bookId, memberId, reservedAt, status]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        memberId:
+          type: integer
+        reservedAt:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [active, fulfilled, cancelled]
+
+    Problem:
+      type: object
+      description: RFC 7807 Problem Details
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        userId:
+          type: integer
+        role:
+          type: string
+          enum: [admin, user]
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Conflict:
+      description: Business rule violation
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login and get JWT token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /books:
+    get:
+      tags: [books]
+      summary: List books with pagination, filtering, sorting
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: author
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [title, author, publishedYear]
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Book'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [books]
+      summary: Create a new book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, author, isbn, publishedYear]
+              properties:
+                title:
+                  type: string
+                author:
+                  type: string
+                isbn:
+                  type: string
+                publishedYear:
+                  type: integer
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Missing required fields
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /books/{id}:
+    get:
+      tags: [books]
+      summary: Get book by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [books]
+      summary: Update book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Book updated
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [books]
+      summary: Delete book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Book deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members:
+    get:
+      tags: [members]
+      summary: List members
+      responses:
+        '200':
+          description: List of members
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [members]
+      summary: Create member
+      responses:
+        '201':
+          description: Member created
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /members/{id}:
+    get:
+      tags: [members]
+      summary: Get member by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Member found
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /loans:
+    get:
+      tags: [loans]
+      summary: List loans
+      responses:
+        '200':
+          description: List of loans
+
+    post:
+      tags: [loans]
+      summary: Create new loan
+      description: |
+        Business rules:
+        - Member must have less than 5 active loans (else 422)
+        - Book must not be currently loaned (else 409)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookId, memberId]
+              properties:
+                bookId:
+                  type: integer
+                memberId:
+                  type: integer
+      responses:
+        '201':
+          description: Loan created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Member has reached the maximum of 5 active loans
+
+  /loans/{id}/extend:
+    put:
+      tags: [loans]
+      summary: Extend loan by 14 days (max 1 time)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan extended
+        '409':
+          description: Already extended or returned
+
+  /loans/{id}/return:
+    put:
+      tags: [loans]
+      summary: Return book
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan returned
+
+  /reservations:
+    get:
+      tags: [reservations]
+      summary: List reservations
+      responses:
+        '200':
+          description: List of reservations
+
+    post:
+      tags: [reservations]
+      summary: Create reservation
+      responses:
+        '201':
+          description: Reservation created
+        '409':
+          description: Active reservation already exists
